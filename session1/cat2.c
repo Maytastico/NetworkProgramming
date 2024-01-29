@@ -45,7 +45,7 @@ int main(int argc, char*argv[]) {
 	}
 	else
 		fd = STDIN_FILENO;
-
+        write_buffer_to_file(fd, buf);
 	return 0;
 }
 
