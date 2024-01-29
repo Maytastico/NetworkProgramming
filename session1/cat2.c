@@ -8,26 +8,44 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define BUFSIZE 1
+#define BUFSIZE 1000
+
+int open_file(char *file_path){
+    int fd;
+    fd = open(file_path,O_RDONLY);
+    if (fd < 0) {
+        printf("error opening %s\n",file_path[1]);
+        return -1;
+    }
+    return fd;
+}
+
+int write_buffer_to_file(int file_handler, char *buffer){
+    int n;
+    while ((n=read(file_handler,buffer, BUFSIZE)) > 0) {
+        if (write(STDOUT_FILENO,buffer,n) != n) {
+            printf("%s", &buffer[1]);
+        }
+    }
+    close(file_handler);
+}
 
 int main(int argc, char*argv[]) {
-	int fd;
-	char *buf[BUFSIZE];
+	int fd; // file handler
+	char *buf[BUFSIZE]; // Buffer mit einem Byte
 	int n;
 	if (argc > 1) {
-		fd = open(argv[1],O_RDONLY);
-		if (fd < 0) {
-			printf("error opening %s\n",argv[1]);
-			return -1;
-		}
+        int i = 1;
+        while (argv[i] != 0){
+		    fd = open_file(argv[i]);
+            if(fd == -1) return -1;
+            write_buffer_to_file(fd, buf);
+            i++;
+        }
 	}
 	else
 		fd = STDIN_FILENO;
 
-	while ((n=read(fd,buf, BUFSIZE)) > 0) {
-		if (write(STDOUT_FILENO,buf,n) != n) {
-		}
-	}
 	return 0;
 }
 
