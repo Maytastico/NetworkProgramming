@@ -3,6 +3,7 @@
 //
 #include <strings.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <time.h>
@@ -35,9 +36,27 @@ main(int argc, char **argv)
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servaddr.sin_port        = htons(80);	/* daytime server */
 
+    // Open the file in read mode
+    fptr = fopen("index.html", "r");
+
+    // Check if the file was opened successfully
+    if (fptr == NULL) {
+        printf("Failed to open the file.\n");
+        return 1;
+    }
+    fseek(fptr, 0, SEEK_END);
+    long fsize = ftell(fptr);
+    fseek(fptr, 0, SEEK_SET);  /* same as rewind(fptr); */
+
+    char *string = malloc(fsize + 1);
+    fread(string, fsize, 1, fptr);
+    fclose(fptr);
+
+
     if(bind(listenfd, (const struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) err_quit("Unable to bind port");
 
     listen(listenfd, BACKLOG);
+
 
     for ( ; ; ) {
         connfd = accept(listenfd, (struct sockaddr *) NULL, NULL);
@@ -46,27 +65,18 @@ main(int argc, char **argv)
             printf("error handling new conenction");
         }
         if(pid == 0){
-            // Open the file in read mode
-            fptr = fopen("index.html", "r");
 
-            // Check if the file was opened successfully
-            if (fptr == NULL) {
-                printf("Failed to open the file.\n");
-                return 1;
-            }
-            char* http_response = "HTTP/1.1 200 OK";
-            write(connfd, http_response, sizeof http_response);
 
-            // Read and print each line of the file
-            while (fgets(line, sizeof(line), fptr)) {
-                printf("%s", line);
-                write(connfd,line, sizeof line);
-            }
+            printf("%s", string);
 
-            // Close the file
-            fclose(fptr);
+            char* http = "HTTP/1.0 200 OK\nContent-Type: text/html\n\n";
+            write(connfd,http, strlen(http));
+            write(connfd,string, strlen(string));
+
+
         }
 
         close(connfd);
+
     }
 }

@@ -11,18 +11,14 @@ int main(void){
     // Open the file in read mode
     filePointer = fopen("session4/index.html", "r");
 
-    // Check if the file was opened successfully
-    if (filePointer == NULL) {
-        printf("Failed to open the file.\n");
-        return 1;
-    }
+    fseek(filePointer, 0, SEEK_END);
+    long fsize = ftell(filePointer);
+    fseek(filePointer, 0, SEEK_SET);  /* same as rewind(filePointer); */
 
-    // Read and print each line of the file
-    while (fgets(line, sizeof(line), filePointer)) {
-        printf("%s", line);
-    }
+    char *string = malloc(fsize + 1);
+    fread(string, fsize, 1, filePointer);
 
-    // Close the file
+    printf("%s", string);
     fclose(filePointer);
 
     return 0;
